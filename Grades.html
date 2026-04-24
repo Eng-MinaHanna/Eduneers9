@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> Eduneers | Grades System </title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+
+        :root {
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #f5b041;
+            --accent-glow: rgba(245, 176, 65, 0.6);
+            --electric-blue: #00d2ff;
+            --electric-glow: rgba(0, 210, 255, 0.5);
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --border-radius: 24px;
+        }
+
+        body.dark-mode {
+            --primary: #f8fafc;
+            --bg-gradient: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --card-bg: rgba(15, 23, 42, 0.9);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            margin: 0;
+            color: var(--text-main);
+            min-height: 100vh;
+            transition: 0.5s;
+            overflow-x: hidden;
+        }
+
+        .circuit-bg {
+            position: fixed;
+            top: -5%;
+            left: -5%;
+            width: 110vw;
+            height: 110vh;
+            z-index: -1;
+            background-image: radial-gradient(circle at 50% 50%, rgba(245, 176, 65, 0.05) 2px, transparent 2px);
+            background-size: 40px 40px;
+            animation: pulseCircuit 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+            pointer-events: none;
+        }
+
+        body.dark-mode .circuit-bg {
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1) 2px, transparent 3px);
+        }
+
+        @keyframes pulseCircuit { 0% { opacity: 0.3; transform: scale(1); } 100% { opacity: 0.8; transform: scale(1.05); } }
+
+        /* 💎 Navbar */
+        .navbar {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(16px);
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nav-brand h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+        }
+
+        .nav-brand h2 .brand-text {
+            background: linear-gradient(to left, #fff, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.dark-mode .nav-brand h2 .brand-text {
+            background: linear-gradient(to left, #fff, var(--electric-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* 🗂️ Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            z-index: 2000;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: right;
+            padding-top: 60px;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 25px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+            margin: 5px 10px;
+            border-radius: 12px;
+        }
+
+        .sidebar a i {
+            font-size: 1.2rem;
+            width: 25px;
+        }
+
+        .sidebar a:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateX(-5px);
+            color: var(--accent);
+        }
+
+        .sidebar a.active {
+            background: linear-gradient(135deg, rgba(245, 176, 65, 0.1), rgba(245, 176, 65, 0.05));
+            color: var(--accent);
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 1500;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .container {
+            padding: 20px 15px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .view-section {
+            display: none !important;
+            background: var(--card-bg);
+            padding: 30px 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 25px;
+            backdrop-filter: blur(15px);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .view-section.active {
+            display: block !important;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(40px) scale(0.96); filter: blur(5px); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
+        }
+
+        /* Inputs & Toggles */
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid transparent;
+            background-color: rgba(0, 0, 0, 0.03);
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            text-align: center;
+            font-family: 'Cairo';
+            transition: 0.3s;
+        }
+
+        body.dark-mode input,
+        body.dark-mode select {
+            background-color: #1e293b;
+            color: #fff;
+            border: 1px solid #334155;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            outline: none;
+            background: #fff;
+        }
+
+        body.dark-mode input:focus,
+        body.dark-mode select:focus {
+            border-color: var(--electric-blue);
+            background: #0f172a;
+        }
+
+        .small-input {
+            width: 70px !important;
+            display: inline-block;
+            padding: 8px 5px !important;
+            margin: 0 5px !important;
+            border: 2px solid var(--accent) !important;
+            color: inherit !important;
+            background: transparent !important;
+            font-weight: 900 !important;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        body.dark-mode .btn-submit {
+            background: linear-gradient(135deg, var(--electric-blue), #0284c7);
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(0, 210, 255, 0.2);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-btn {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-muted);
+            padding: 14px 5px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            border: 2px solid transparent;
+        }
+
+        body.dark-mode .toggle-btn {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        /* 🔴 إصلاح الأزرار في الوايت مود والدارك مود لتكون زاهية جداً */
+        .toggle-btn.active-att {
+            background: #2563eb !important;
+            color: white !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
+        }
+
+        .toggle-btn.active-feed {
+            background: #059669 !important;
+            color: white !important;
+            border-color: #059669 !important;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3) !important;
+        }
+
+        .toggle-btn.active-attit {
+            background: #9333ea !important;
+            color: white !important;
+            border-color: #9333ea !important;
+            box-shadow: 0 4px 10px rgba(147, 51, 234, 0.3) !important;
+        }
+
+        body.dark-mode .toggle-btn.active-att {
+            background: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
+        }
+
+        body.dark-mode .toggle-btn.active-feed {
+            background: #10b981 !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5) !important;
+        }
+
+        body.dark-mode .toggle-btn.active-attit {
+            background: #a855f7 !important;
+            border-color: #a855f7 !important;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important;
+        }
+
+        /* 🏆 Leaderboard */
+        .filter-box {
+            background: rgba(245, 176, 65, 0.05);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px dashed var(--accent);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        body.dark-mode .filter-box {
+            background: rgba(0, 210, 255, 0.05);
+            border-color: var(--electric-blue);
+        }
+
+        .leader-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.02);
+            padding: 15px 20px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+        }
+
+        body.dark-mode .leader-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .leader-card:hover {
+            transform: translateX(-5px);
+        }
+
+        .rank-1 {
+            border-right: 6px solid #FFD700;
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%);
+        }
+
+        .rank-2 {
+            border-right: 6px solid #C0C0C0;
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.08) 0%, transparent 100%);
+        }
+
+        .rank-3 {
+            border-right: 6px solid #CD7F32;
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.08) 0%, transparent 100%);
+        }
+
+        .leader-rank {
+            font-size: 1.5rem;
+            font-weight: 900;
+            width: 45px;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        .leader-name {
+            flex: 1;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-right: 10px;
+        }
+
+        .leader-score {
+            background: var(--primary);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-weight: 900;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .leader-score {
+            background: var(--electric-blue);
+            color: #000;
+            box-shadow: 0 4px 10px rgba(0, 210, 255, 0.2);
+        }
+
+        /* Tables */
+        .res-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .res-table {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .res-table th {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        body.dark-mode .res-table th {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .res-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        body.dark-mode .res-table td {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 25px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .chart-container {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        /* ⚡ Loader & Toast */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .bar-bg {
+            width: 70%;
+            max-width: 400px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--electric-blue);
+            transition: 0.1s linear;
+            box-shadow: 0 0 15px var(--electric-blue);
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 14px 25px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: translate(-50%, 20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        /* 🛡️ منطق الصلاحيات الاحترافي */
+        .manager-only,
+        .admin-only,
+        .cross-group-only {
+            display: none !important;
+        }
+
+        body.role-manager :not(.view-section).manager-only {
+            display: block !important;
+        }
+
+        body.role-manager a.manager-only {
+            display: flex !important;
+        }
+
+        body.role-admin :not(.view-section).manager-only,
+        body.role-admin :not(.view-section).admin-only,
+        body.role-admin :not(.view-section).cross-group-only {
+            display: block !important;
+        }
+
+        body.role-admin a.manager-only,
+        body.role-admin a.admin-only {
+            display: flex !important;
+        }
+
+        body.role-co-founder :not(.view-section).manager-only,
+        body.role-co-founder :not(.view-section).admin-only,
+        body.role-co-founder :not(.view-section).cross-group-only {
+            display: block !important;
+        }
+
+        body.role-co-founder a.manager-only,
+        body.role-co-founder a.admin-only {
+            display: flex !important;
+        }
+
+        body.role-owner :not(.view-section).manager-only,
+        body.role-owner :not(.view-section).admin-only,
+        body.role-owner :not(.view-section).cross-group-only {
+            display: block !important;
+        }
+
+        body.role-owner a.manager-only,
+        body.role-owner a.admin-only {
+            display: flex !important;
+        }
+
+        body.role-user .manager-only,
+        body.role-user .admin-only,
+        body.role-manager .admin-only {
+            display: none !important;
+        }
+
+        /* 📐 استجابة الشاشات (Responsive Design) */
+        @media (min-width: 1024px) {
+            .container { max-width: 1200px; padding: 40px 20px; }
+            .view-section > div { max-width: 800px !important; margin: auto; }
+            .view-section { padding: 40px 50px; }
+            .view-section:hover { transform: translateY(-4px); box-shadow: 0 35px 60px rgba(0,0,0,0.08); }
+            body.dark-mode .view-section:hover { box-shadow: 0 35px 60px rgba(0,210,255,0.05); border-color: rgba(0,210,255,0.2); }
+            input, select { padding: 18px; font-size: 16px; margin-bottom: 20px; transition: 0.4s ease; }
+            .btn-submit { padding: 18px; font-size: 1.1rem; border-radius: 18px; }
+            .chart-container { height: 450px; }
+            .leader-card { padding: 25px; }
+            .leader-name { font-size: 1.3rem; }
+        }
+
+        @media (max-width: 650px) {
+            .nav-brand h2 { font-size: 1.1rem; gap: 4px; }
+            .nav-brand span#welcomeName { display: none; } 
+            .view-section { padding: 20px 15px; }
+            h2, h3 { font-size: 1.2rem !important; }
+            input, select, .btn-submit { font-size: 14px; padding: 12px; }
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+
+    <div class="circuit-bg"></div>
+
+    <div id="loader">
+        <div
+            style="width:60px; height:60px; margin-bottom:20px; position:relative; display:flex; justify-content:center; align-items:center;">
+            <div
+                style="position:absolute; width:100%; height:100%; border:2px solid var(--electric-blue); border-radius:50%; opacity:0.6; animation: spin 2s linear infinite;">
+            </div>
+            <div
+                style="width:12px; height:12px; background:var(--electric-blue); border-radius:50%; box-shadow: 0 0 20px var(--electric-blue);">
+            </div>
+        </div>
+        <div id="loaderMsg" style="font-weight: 800; font-size: 1.1rem; letter-spacing: 1px;">جاري تجميع حزم البيانات...
+        </div>
+        <div class="bar-bg">
+            <div class="bar-fill" id="barFill"></div>
+        </div>
+        <div style="font-size: 24px; font-weight: 900; font-family: monospace; color: var(--electric-blue);"
+            id="percent">0%</div>
+    </div>
+    <style>
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <div class="navbar">
+        <div class="nav-content">
+            <div class="nav-brand">
+                <h2>⚡ <span class="brand-text">Eduneers</span> <span id="welcomeName"
+                        style="font-size: 11px; opacity:0.7;"></span></h2>
+            </div>
+            <div class="nav-actions">
+                <span id="groupBadge"
+                    style="font-size: 11px; font-weight: 800; background: rgba(0, 210, 255, 0.1); color: var(--electric-blue); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(0, 210, 255, 0.3); display: none;"></span>
+                <button class="nav-btn" onclick="toggleDarkMode()">🌓</button>
+                <button class="nav-btn" onclick="toggleSidebar()">☰</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()">×</button>
+        <div
+            style="padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;">
+            <div style="font-weight: 900; color: var(--electric-blue); font-size: 1.3rem;">نظام التقييم المركزي</div>
+            <div id="sideRole"
+                style="font-size: 10px; opacity: 0.7; margin-top: 5px; text-transform: uppercase; background: rgba(255,255,255,0.1); display: inline-block; padding: 4px 10px; border-radius: 8px;">
+            </div>
+        </div>
+
+        <a href="#" class="active" onclick="switchView('grading'); toggleSidebar();" id="nav-grading">
+            <span>📝</span> <span>رصد الدرجات</span>
+        </a>
+        <a href="#" onclick="switchView('searchView'); toggleSidebar();" id="nav-searchView">
+            <span>🔍</span> <span>استعلام عن طالب</span>
+        </a>
+        <a href="#" class="manager-only" onclick="switchView('topView'); toggleSidebar();" id="nav-topView">
+            <span>🏆</span> <span>لوحة الشرف Top 5</span>
+        </a>
+        <a href="#" class="manager-only" onclick="switchView('settings'); toggleSidebar();" id="nav-settings">
+            <span>⚙️</span> <span>إعدادات النظام</span>
+        </a>
+
+        <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 25px;"></div>
+        <a href="index.html" style="color: var(--accent);"><span>🏠</span> <span>نظام الحضور</span></a>
+        <a href="#" onclick="logout()" style="color: #ef4444; margin-top: 10px;"><span>🚪</span> <span>تسجيل
+                الخروج</span></a>
+    </div>
+
+    <div class="container">
+        <div id="toast"></div>
+
+        <div class="cross-group-only"
+            style="background: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); text-align:center; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+            <label style="font-weight: 800; color: #c084fc; font-size: 13px; display:block; margin-bottom:10px;">تحكم
+                الجروب 👑</label>
+            <select id="globalGroupSelect"
+                style="margin-bottom:0; max-width: 300px; border-color:#c084fc; color:#c084fc;"
+                onchange="changeGlobalGroup(this.value)"></select>
+        </div>
+
+        <div id="view-grading" class="view-section active">
+            <div style="max-width: 500px; margin: auto;">
+                <h3
+                    style="color:var(--electric-blue); text-align:center; font-size:24px; font-weight:800; margin-bottom:20px;">
+                    رصد تقييم المحاضرة</h3>
+
+                <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">رقم كود الطالب</label>
+                <input type="text" id="studentCode" placeholder="أدخل الرقم فقط (مثال: 15)"
+                    style="font-size:1.4rem; letter-spacing: 2px;">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">رقم المحاضرة
+                        المستهدفة</label>
+                    <select id="currentLecNum" style="margin-bottom:0;">
+                        <script>for (let i = 1; i <= 20; i++) document.write(`<option value="${i}">المحاضرة ${i}</option>`);</script>
+                    </select>
+                </div>
+
+                <div class="grid-3">
+                    <div class="toggle-btn" id="attBtn" onclick="this.classList.toggle('active-att')">👤 حضور (15)</div>
+                    <div class="toggle-btn" id="feedBtn" onclick="this.classList.toggle('active-feed')">💬 فيدباك (5)
+                    </div>
+                    <div class="toggle-btn" id="attitBtn" onclick="this.classList.toggle('active-attit')">⭐ سلوك (5)
+                    </div>
+                </div>
+
+                <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">بونص إضافي (Bonus)</label>
+                <input type="number" id="valBonus" placeholder="0">
+
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:15px 0;">
+
+                <div class="grid-2">
+                    <div><label style="font-size:13px; font-weight:bold; color:var(--text-muted);">درجة
+                            التاسك</label><input type="number" id="valTask" placeholder="من 70"></div>
+                    <div><label style="font-size:13px; font-weight:bold; color:var(--text-muted);">درجة
+                            الكويز</label><input type="number" id="valQuiz" placeholder="الدرجة"></div>
+                </div>
+
+                <button class="btn-submit" onclick="submitData()">حفظ وإرسال التقييم 📡</button>
+            </div>
+        </div>
+
+        <div id="view-searchView" class="view-section">
+            <div style="max-width: 500px; margin: auto;">
+                <h3 style="color:var(--accent); text-align:center; font-size:24px; font-weight:800;">استعلام شامل عن
+                    متدرب</h3>
+
+                <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">رقم الطالب</label>
+                <input type="text" id="searchCode" placeholder="أدخل الرقم...">
+
+                <div class="filter-box">
+                    <label style="font-size:13px; font-weight:bold;">حصر التقييم من محاضرة</label>
+                    <div>
+                        <input type="number" id="sfL" value="1" class="small-input"> إلى <input type="number" id="stL"
+                            value="5" class="small-input">
+                    </div>
+                </div>
+
+                <button class="btn-submit"
+                    style="background: linear-gradient(135deg, var(--accent), #d97706); color:#000;"
+                    onclick="searchStudent()">🔍 ابدأ التحليل</button>
+
+                <div id="searchResult"
+                    style="display:none; margin-top:25px; background:rgba(0,0,0,0.02); padding:20px; border-radius:16px; border:1px solid rgba(0,0,0,0.05);">
+                    <div id="resName"
+                        style="font-weight:900; color:var(--electric-blue); text-align:center; font-size:1.4rem;"></div>
+                    <div style="text-align:center; margin:15px 0;"><span
+                            style="background:var(--accent); color:#000; padding:8px 25px; border-radius:50px; font-weight:900; box-shadow:0 4px 10px rgba(245, 176, 65, 0.3);">إجمالي
+                            النقاط: <span id="resTotal" style="font-size:1.2rem;">0</span></span></div>
+                    <table class="res-table">
+                        <thead>
+                            <tr>
+                                <th>بند التقييم</th>
+                                <th>النقاط المكتسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resDetails"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-topView" class="view-section manager-only">
+            <div style="max-width: 600px; margin: auto;">
+                <h3
+                    style="color:var(--electric-blue); text-align:center; font-size:26px; font-weight:900; margin-bottom:20px;">
+                    🏆 لوحة متفوقي الجروب</h3>
+
+                <div class="filter-box">
+                    <label style="font-size:14px; font-weight:bold; margin-bottom:10px; display:block;">تحديد النطاق
+                        الزمني للتقييم</label>
+                    <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+                        من <input type="number" id="fL" value="1" class="small-input"> إلى <input type="number" id="tL"
+                            value="5" class="small-input">
+                    </div>
+                    <div style="font-size: 10px; margin-top: 10px; opacity: 0.7;">(يتم تجميع نقاط: الحضور + الفيدباك +
+                        السلوك + البونص + التاسكات + الكويزات)</div>
+                </div>
+
+                <button class="btn-submit" style="background: linear-gradient(135deg, #10b981, #059669);"
+                    onclick="extractLeaderboard()">استخراج ترتيب الجروب 🚀</button>
+
+                <div class="search-box" style="position:relative; margin-top:20px;">
+                    <input type="text" id="searchLeaderInput" placeholder="بحث بالاسم أو الكود للفلترة السريعة..." onkeyup="filterLeaderboard()" style="margin:0; padding:15px; padding-right:45px; box-sizing:border-box; width:100%; text-align: right;">
+                    <span style="position:absolute; right:15px; top:17px; opacity:0.5;">🔍</span>
+                </div>
+
+                <div id="leaderboard" style="margin-top: 25px;"></div>
+
+                <div id="chartWrapper" style="display:none;">
+                    <div class="chart-container"><canvas id="topChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view-section manager-only">
+            <div style="max-width: 500px; margin: auto;">
+                <h3 style="text-align:center; font-size:24px; font-weight:900; margin-bottom:20px; color:var(--electric-blue);">⚙️ إعدادات النظام</h3>
+                
+                <div style="background: rgba(0,0,0,0.1); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px dashed var(--accent);">
+                    <h4 style="margin-top:0; color:var(--accent);">🔗 إعداد الربط الفردي</h4>
+                    <p style="font-size: 11px; opacity:0.8; margin-bottom: 15px;">ضع رابط الـ API للرفع على الشيتات الفردية لكل استعلام.</p>
+                    <input type="text" id="personalApiInput" placeholder="ضع رابط السكربت هنا..." style="font-size:11px; margin-bottom:10px; border:1px solid rgba(255,176,65,0.4);">
+                    <button class="btn-submit" style="background: var(--accent); color:#000; font-size:14px; padding: 10px; margin-top:0;" onclick="savePersonalApi()">حفظ الرابط 🔗</button>
+                </div>
+
+                <div class="admin-only" style="background: rgba(0,0,0,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                    <h4 style="margin-top:0; color:var(--text-main);">🎯 إعدادات نهايات الكويز العظمى</h4>
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">رقم الكويز المستهدف:</label>
+                    <select id="setQNum" onchange="loadSettingMax()">
+                        <script>for (let i = 1; i <= 20; i++) document.write(`<option value="${i}">Quiz ${i}</option>`);</script>
+                    </select>
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-muted);">درجة النهاية العظمى:</label>
+                    <input type="number" id="setQMax" placeholder="مثلاً: 15">
+                    <button class="btn-submit" style="background:var(--text-main); color:var(--card-bg);"
+                        onclick="saveMaxConfig()">تثبيت الدرجة 🔒</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const GRADES_API = "https://script.google.com/macros/s/AKfycbx715VQ1MfNK_yLaX6m2rrNaGrJANjIGss9ysM4Sv8z6npcjVJOdnGZZDbJL74-oxDu/exec";
+        const QUIZ_API = "https://script.google.com/macros/s/AKfycbwne4ufHfwjbcS6p39pfslPsTtPsQn8n24zapV4ytou5L4sacK0Y8KHYq_vx64PiYOVMQ/exec";
+        const ATTEND_API = "https://script.google.com/macros/s/AKfycbyQlZlxpCyr68rjjsxGmXrPcLk0X7agsGEpG6YaGGNZwTvPY3sSbx2td5blRPP6oqbfhg/exec";
+        const EXTRA_API = "https://script.google.com/macros/s/AKfycbw6jcjRGj-08bLUez0S311RIjPZLdpHwXs4BflMRnsKlplaGfipTRCLpHloDnIlo4S5cg/exec";
+
+        let myChart = null;
+
+        // 🔴 دالة تحويل الأرقام العربية إلى إنجليزية
+        function convertNumerals(str) {
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return str.replace(/[٠-٩]/g, w => arabicNumbers.indexOf(w));
+        }
+
+        window.onload = () => {
+            if (localStorage.getItem('isLoggedIn') !== 'true') { window.location.href = 'index.html'; return; }
+            if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+
+            const rawRole = localStorage.getItem('userRole') || "CADRE";
+            const role = rawRole.toUpperCase();
+            const name = localStorage.getItem('userName') || "مهندس";
+
+            document.getElementById('welcomeName').innerText = `| ${name}`;
+            document.getElementById('sideRole').innerText = rawRole;
+
+            const groupVal = localStorage.getItem('userGroup') || "Group A";
+            document.getElementById('groupBadge').innerText = groupVal;
+            document.getElementById('groupBadge').style.display = "inline-block";
+
+            if (role === 'OWNER') document.body.classList.add('role-owner');
+            else if (role === 'CO-FOUNDER') document.body.classList.add('role-co-founder');
+            else if (role === 'TEAM MANAGER' || role === 'ADMIN') document.body.classList.add('role-admin');
+            else if (role === 'COORDINATOR' || role === 'MANAGER') document.body.classList.add('role-manager');
+            else document.body.classList.add('role-user');
+
+            fillGroupSelects();
+            
+            if(document.getElementById('personalApiInput')) {
+                document.getElementById('personalApiInput').value = localStorage.getItem('PERSONAL_API') || "";
+            }
+        };
+
+        function savePersonalApi() {
+            const url = document.getElementById('personalApiInput').value.trim();
+            localStorage.setItem('PERSONAL_API', url);
+            showToast("✅ تم حفظ الرابط وسيطبق من الآن! 🔗", "success");
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            const navItem = document.getElementById(`nav-${viewId}`);
+            if (navItem) navItem.classList.add('active');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            if (myChart) extractTop5();
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        function fillGroupSelects() {
+            let options = ''; const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < letters.length; i++) { let g = 'Group ' + letters[i]; options += `<option value="${g}">${g}</option>`; }
+            const gSelect = document.getElementById('globalGroupSelect');
+            if (gSelect) { gSelect.innerHTML = options; gSelect.value = localStorage.getItem('userGroup') || 'Group A'; }
+        }
+
+        function changeGlobalGroup(val) { localStorage.setItem('userGroup', val); document.getElementById('groupBadge').innerText = val; }
+
+        function showLoader(show, msg = "جاري العمل...") {
+            const l = document.getElementById('loader');
+            if (show) {
+                document.getElementById('loaderMsg').innerText = msg;
+                l.style.display = 'flex';
+                let p = 0; window.ldrItv = setInterval(() => { p += Math.floor(Math.random() * 10) + 1; if (p > 90) p = 90; document.getElementById('barFill').style.width = p + '%'; document.getElementById('percent').innerText = p + '%'; }, 100);
+            } else {
+                clearInterval(window.ldrItv);
+                document.getElementById('barFill').style.width = '100%'; document.getElementById('percent').innerText = '100%';
+                setTimeout(() => { l.style.display = 'none'; document.getElementById('barFill').style.width = '0%'; }, 300);
+            }
+        }
+
+        function showToast(text, type = "success") {
+            const t = document.getElementById('toast'); t.innerText = text;
+            t.style.background = type === "success" ? "linear-gradient(135deg, #10b981, #059669)" : "linear-gradient(135deg, #ef4444, #dc2626)";
+            t.style.display = 'block'; setTimeout(() => { t.style.display = 'none'; }, 4000);
+        }
+
+        function getAuthParams() {
+            return `&email=${encodeURIComponent(localStorage.getItem('userEmail'))}&token=${encodeURIComponent(localStorage.getItem('sessionToken'))}&group=${encodeURIComponent(localStorage.getItem('userGroup'))}`;
+        }
+
+        function submitData() {
+            let numRaw = document.getElementById('studentCode').value.trim();
+            if (!numRaw) return showToast("❌ برجاء إدخال رقم كود الطالب", "error");
+
+            let num = convertNumerals(numRaw); 
+            const groupLetter = localStorage.getItem('userGroup').replace("Group ", "").trim();
+            const code = groupLetter + num + "EDUR9";
+            const lec = document.getElementById('currentLecNum').value;
+            const auth = getAuthParams();
+
+            let p = [];
+            let taskNameCol = "TASK " + lec; 
+            let personalApiUrl = localStorage.getItem('PERSONAL_API') || "";
+            
+            if (document.getElementById('attBtn').classList.contains('active-att')) {
+                p.push(fetch(`${ATTEND_API}?action=scan&qrCode=${code}&lectureNum=${lec}&weight=15${auth}`).then(r=>r.json()).catch(e=>({})));
+                if(personalApiUrl) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=attendance .15&val=15`).catch(e=>({})));
+                if(personalApiUrl) p.push(fetch(`${personalApiUrl}?action=attend&qrCode=${code}&lectureNum=${lec}`).catch(e=>({})));
+            }
+            
+            let taskVal = convertNumerals(document.getElementById('valTask').value);
+            if (taskVal) {
+                p.push(fetch(`${GRADES_API}?action=saveGrade&qrCode=${code}&taskNum=${lec}&val=${taskVal}${auth}`).then(r=>r.json()).catch(e=>({})));
+                if(personalApiUrl) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=Main task&val=${taskVal}`).catch(e=>({})));
+            }
+
+            let quizVal = convertNumerals(document.getElementById('valQuiz').value);
+            if (quizVal) {
+                p.push(fetch(`${QUIZ_API}?action=saveQuiz&qrCode=${code}&quizNum=${lec}&val=${quizVal}${auth}`).then(r=>r.json()).catch(e=>({})));
+                if(personalApiUrl) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=online quize&val=${quizVal}`).catch(e=>({})));
+            }
+
+            let f = document.getElementById('feedBtn').classList.contains('active-feed') ? 1 : 0;
+            let a = document.getElementById('attitBtn').classList.contains('active-attit') ? 5 : 0;
+            let b = convertNumerals(document.getElementById('valBonus').value) || 0;
+
+            if (f || a || b != 0) {
+                p.push(fetch(`${EXTRA_API}?action=saveExtra&qrCode=${code}&lectureNum=${lec}&feedback=${f}&attitude=${a}&bonus=${b}${auth}`).then(r=>r.json()).catch(e=>({})));
+                if(personalApiUrl && a) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=attitude .5&val=${a}`).catch(e=>({})));
+                if(personalApiUrl && f) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=feedback.5&val=${f * 5}`).catch(e=>({})));
+                if(personalApiUrl && b) p.push(fetch(`${personalApiUrl}?action=update&qrCode=${code}&taskName=${taskNameCol}&category=bonus&val=${b}`).catch(e=>({})));
+            }
+
+            if (p.length === 0) {
+                return showToast("⚠️ لم يتم إدخال أي تقييم لإرساله!", "error");
+            }
+
+            // الإفراغ التلقائي السريع لمواصلة الرصد دون انتظار
+            document.getElementById('studentCode').value = "";
+            document.getElementById('valTask').value = "";
+            document.getElementById('valQuiz').value = "";
+            document.getElementById('valBonus').value = "";
+            document.getElementById('attBtn').classList.remove('active-att');
+            document.getElementById('feedBtn').classList.remove('active-feed');
+            document.getElementById('attitBtn').classList.remove('active-attit');
+            document.getElementById('studentCode').focus();
+
+            showToast("⏳ جاري التسجيل...", "success");
+
+            Promise.all(p).then(results => {
+                let studentName = "";
+                for(let res of results) {
+                    if(!res) continue;
+                    if(res.name) { studentName = res.name; break; }
+                    if(res.studentName) { studentName = res.studentName; break; }
+                    if(res.message && res.message.includes("الطالب")) { 
+                        let parts = res.message.split("الطالب");
+                        if(parts.length>1) { studentName = parts[1].replace(':', '').trim(); break; }
+                    }
+                    if(res.message && res.message.includes("-")) { 
+                        let parts = res.message.split("-");
+                        if(parts.length>1) { studentName = parts[1].trim(); break; }
+                    }
+                }
+                let displayName = studentName || (groupLetter + num);
+                showToast("✅ تم التوثيق بنجاح لـ: " + displayName, "success");
+            }).catch(e => {
+                showToast("❌ حدث خطأ في بعض ملفات التقييم", "error");
+            });
+        }
+
+        async function searchStudent() {
+            let numRaw = document.getElementById('searchCode').value.trim();
+            if (!numRaw) return showToast("❌ برجاء إدخال رقم الطالب", "error");
+
+            let num = convertNumerals(numRaw); // 🔴 تحويل الأرقام للعربي
+            let fl = document.getElementById('sfL').value, tl = document.getElementById('stL').value;
+            if (parseInt(fl) > parseInt(tl)) return showToast("❌ نطاق المحاضرات غير صحيح", "error");
+
+            const group = localStorage.getItem('userGroup');
+            const code = group.replace("Group ", "").trim() + num + "EDUR9";
+            const auth = getAuthParams() + `&fromLec=${fl}&toLec=${tl}&fromTask=${fl}&toTask=${tl}&fromQuiz=${fl}&toQuiz=${tl}`;
+
+            showLoader(true, "جاري استرجاع سجلات الطالب 🔍...");
+            try {
+                const [rA, rX, rT, rQ] = await Promise.all([
+                    fetch(`${ATTEND_API}?action=getTop&weight=15${auth}`).then(r => r.json()),
+                    fetch(`${EXTRA_API}?action=getTop${auth}`).then(r => r.json()),
+                    fetch(`${GRADES_API}?action=getTop${auth}`).then(r => r.json()),
+                    fetch(`${QUIZ_API}?action=getTop${auth}`).then(r => r.json())
+                ]);
+
+                let total = 0; let html = "";
+                const addRow = (res, label) => {
+                    let s = (res.scores || []).find(x => x.id === code);
+                    let val = (s && !isNaN(parseFloat(s.total))) ? parseFloat(s.total) : 0;
+                    html += `<tr><td>${label}</td><td><span style="color:var(--electric-blue); font-size:1.1rem;">${val}</span></td></tr>`;
+                    total += val;
+                    if (s && s.name) document.getElementById('resName').innerText = s.name;
+                };
+
+                document.getElementById('resName').innerText = "لم يتم العثور على اسم";
+                addRow(rA, "إجمالي الحضور");
+                addRow(rX, "إجمالي (الفيدباك + السلوك + البونص)");
+                addRow(rT, "إجمالي التاسكات");
+                addRow(rQ, "إجمالي الكويزات");
+
+                document.getElementById('searchResult').style.display = 'block';
+                document.getElementById('resDetails').innerHTML = html;
+                document.getElementById('resTotal').innerText = total;
+                showLoader(false);
+
+            } catch (e) { showLoader(false); showToast("❌ خطأ في جلب البيانات", "error"); }
+        }
+
+        let fullLeaderboard = [];
+        async function extractLeaderboard() {
+            let fl = document.getElementById('fL').value, tl = document.getElementById('tL').value;
+            if (parseInt(fl) > parseInt(tl)) return showToast("❌ نطاق المحاضرات غير صحيح", "error");
+
+            const auth = getAuthParams() + `&fromLec=${fl}&toLec=${tl}&fromTask=${fl}&toTask=${tl}&fromQuiz=${fl}&toQuiz=${tl}`;
+
+            showLoader(true, "جاري تحليل بيانات الجروب لاستخراج الترتيب 🏆...");
+            try {
+                const [rT, rQ, rA, rX] = await Promise.all([
+                    fetch(`${GRADES_API}?action=getTop${auth}`).then(r => r.json()),
+                    fetch(`${QUIZ_API}?action=getTop${auth}`).then(r => r.json()),
+                    fetch(`${ATTEND_API}?action=getTop&weight=15${auth}`).then(r => r.json()),
+                    fetch(`${EXTRA_API}?action=getTop${auth}`).then(r => r.json())
+                ]);
+
+                let m = {};
+                const col = (d) => {
+                    if (d.status === 'success') {
+                        d.scores.forEach(s => {
+                            let val = parseFloat(s.total);
+                            if (!isNaN(val)) {
+                                if (!m[s.id]) m[s.id] = { id: s.id, n: s.name, t: 0 };
+                                m[s.id].t += val;
+                            }
+                        });
+                    }
+                };
+
+                col(rT); col(rQ); col(rA); col(rX);
+                
+                fullLeaderboard = Object.values(m).sort((a, b) => b.t - a.t);
+                fullLeaderboard.forEach((s, idx) => s.rank = idx + 1);
+
+                showLoader(false);
+
+                if (fullLeaderboard.length === 0) {
+                    document.getElementById('leaderboard').innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-muted); font-weight:bold;'>لا توجد بيانات كافية لعرض الترتيب</div>";
+                    document.getElementById('chartWrapper').style.display = 'none';
+                    return;
+                }
+
+                renderLeaderboard(fullLeaderboard);
+                document.getElementById('chartWrapper').style.display = 'block';
+                let top5 = fullLeaderboard.slice(0, 5);
+                renderChart(top5.map(x => (x.n || "").split(" ")[0]), top5.map(x => x.t));
+
+            } catch (e) { showLoader(false); showToast("❌ فشل استخراج الترتيب", "error"); }
+        }
+
+        function renderLeaderboard(dataArray) {
+            let listHtml = "";
+            if (dataArray.length === 0) {
+                 document.getElementById('leaderboard').innerHTML = "<div style='text-align:center; padding:20px;'>لا توجد نتائج متطابقة للبحث</div>"; return;
+            }
+            dataArray.forEach(s => {
+                let rankClass = s.rank <= 3 ? `rank-${s.rank}` : `rank-other`;
+                let rankIcon = s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : `#${s.rank}`;
+                listHtml += `
+            <div class="leader-card ${rankClass}">
+                <div class="leader-rank">${rankIcon}</div>
+                <div class="leader-name" style="flex:1; padding-right:15px; text-align:right;">${s.n} <br><span style="font-size:11px; color:var(--text-muted); font-family:monospace;">${s.id}</span></div>
+                <div class="leader-score">${s.t} Pt</div>
+            </div>`;
+            });
+            document.getElementById('leaderboard').innerHTML = listHtml;
+        }
+
+        function filterLeaderboard() {
+            const query = (document.getElementById('searchLeaderInput').value || "").toLowerCase();
+            renderLeaderboard(fullLeaderboard.filter(s => (s.n || "").toLowerCase().includes(query) || (s.id || "").toLowerCase().includes(query)));
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('topChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            const isDark = document.body.classList.contains('dark-mode');
+            const barColor = isDark ? '#00d2ff' : '#0f172a';
+            const textColor = isDark ? '#cbd5e1' : '#64748b';
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'إجمالي النقاط', data, backgroundColor: ['#FFD700', '#C0C0C0', '#CD7F32', barColor, barColor], borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: textColor } }, x: { ticks: { color: textColor, font: { family: 'Cairo', weight: 'bold' } } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function loadSettingMax() { }
+        function saveMaxConfig() { showToast("✅ تم حفظ الإعدادات بنجاح"); }
+    </script>
+</body>
+
+</html>
